@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: medicare-plus-frontend-service
+  namespace: default
+  labels:
+    app: medicare-plus-frontend
+    component: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: medicare-plus-frontend
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medicare-plus-frontend-nodeport
+  namespace: default
+  labels:
+    app: medicare-plus-frontend
+    component: frontend
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30080
+    protocol: TCP
+    name: http
+  selector:
+    app: medicare-plus-frontend
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: medicare-plus-frontend-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "Referrer-Policy: no-referrer-when-downgrade";
+      more_set_headers "Content-Security-Policy: default-src 'self' http: https: data: blob: 'unsafe-inline'";
+spec:
+  tls:
+  - hosts:
+    - medicare-plus.example.com
+    secretName: medicare-plus-tls
+  rules:
+  - host: medicare-plus.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: medicare-plus-frontend-service
+            port:
+              number: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medicare-plus-frontend-loadbalancer
+  namespace: default
+  labels:
+    app: medicare-plus-frontend
+    component: frontend
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 8080
+    protocol: TCP
+    name: https
+  selector:
+    app: medicare-plus-frontend
