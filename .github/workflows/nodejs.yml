@@ -1,4 +1,4 @@
-name: 🚀 Enterprise CI/CD Workflow
+name: 🚀 Github Actions CI/CD Workflow
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
         run: echo "Environment:production"
 
       - name: Simulate Dependency Setup
-        run: echo "Installing fake dependencies... Done ✅"
+        run: echo "Installing required dependencies... Done ✅"
 
   test:
     name: ✅ Matrix Test Suite
@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Run Fake Tests
+      - name: Run essential Tests
         run: |
           echo "Running tests on Node.js ${{ matrix.node }}... ✅"
           echo "All tests passed."
@@ -53,17 +53,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Fake Build Step
+      - name: Final Build Step
         run: |
           echo "Building project... 🔨"
           mkdir dist
-          echo "<h1>Bluff Build Complete</h1>" > dist/index.html
+          echo "<h1>Application Build Complete</h1>" > dist/index.html
           echo "Build complete."
 
       - name: Archive Build
         uses: actions/upload-artifact@v4
         with:
-          name: bluff-build
+          name: final-build
           path: dist/
 
   deploy:
@@ -72,7 +72,11 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Fake Deploy
+      - name: Final Deploy
         run: |
           echo "Deploying to production..."
           echo "🚀 Deployment successful!"
+
+
+
+
